@@ -85,7 +85,7 @@ def CleanDataFrame_TRAIN_ONLY(df, window_size=15):
         ranges = ReturnRangesForChanges(zeroes, window_size)
                 
         for index, range_ in enumerate(ranges):
-            if range_[1] - range_[0] <  30:
+            if range_[1] - range_[0] < 62:
                 continue
             
             data = df_pivot.loc[i, :].copy()
@@ -123,46 +123,43 @@ def CleanDataFrame_TEST(df, window_size=15):
     ids = np.unique(df.ATM_ID)
     df_pivot = pd.pivot_table(df, values='CLIENT_OUT', index='ATM_ID', columns='DATE')
     
-    df
-    # remove first zeroes
     df_pivot = df_pivot.apply(ChangeFirstZeroesToNone, axis=1)
-    
-    
     df_zeroes = FindZeroes(df_pivot, window_size=window_size)
-    
     final_pivot = pd.DataFrame(columns=df_pivot.columns)
-    
-    
-    is_small = defaultdict(lambda :  False)
+
     renumerate_dict = {}
     
-    
+    columns_size = df_pivot.shape[1]
+        
     counter = 0
     for i in ids:
         zeroes = df_zeroes.loc[i, :].values
-        ranges = ReturnRangesForChanges(zeroes, window_size)
-        
-        if ranges[-1][1] - ranges[-1][0] < 30:
-#             print(i, ranges)
-            ranges[-1][0] = ranges[-2][0]
-            is_small[i] = True
+        ranges = ReturnRangesForChanges(zeroes, window_size)[-1]
             
         renumerate_dict[counter] = i
         
-        ranges = ranges[-1:]
-        for index, range_ in enumerate(ranges):
-            if range_[1] - range_[0] <  30:
-                raise "CreatingNewPivotTable_TEST failed, call Sasha!!!"
-            
-            
-            data = df_pivot.loc[i, :].copy()
-            data[:range_[0]] = None
-            data[range_[1]:] = None
-#             print(range_, counter)
-            final_pivot.loc[counter, :] = data
-    
-            counter += 1
+        print(ranges)
         
+        data = df_pivot.loc[i, :].copy()
+        
+        if ranges[1] - ranges[0] < 62:
+            
+            print(i)
+            print(ranges)
+            
+            if ranges[1] - ranges[0] < 7:
+                data[:] = np.mean(df_pivot.loc[i, np.range(ranges[-1][0], ranges[-1][1])].values)
+            else:
+                for index in range(8, 100):
+                    data[-index] = data[-index + 7]        
+        
+        data[:(ranges[1] - 61)] = None
+        data[ranges[1]:] = None
+        
+        final_pivot.loc[counter, :] = data
+
+        counter += 1
+
 
     del df_zeroes
     
@@ -176,6 +173,4 @@ def CleanDataFrame_TEST(df, window_size=15):
     
     final_df.ATM_ID = final_df.ATM_ID.map(renumerate_dict)
     
-    return final_df, is_small
-
-
+    return final_df

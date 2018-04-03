@@ -13,6 +13,11 @@ def score_series(y_true, y_pred):
     """
     return np.mean(np.abs(y_true - y_pred))/np.mean(np.abs(y_pred))
 
+def our_scorer(model, X, y):
+    y_pred = X.copy()#deep=True)
+    y_pred['CLIENT_OUT'] = y
+    return scorer(model.predict(X), y_pred)
+
 def scorer(df_true, df_pred):
    
     scores = []
@@ -32,7 +37,7 @@ def scorer(df_true, df_pred):
         score = score_series(df_true_part.CLIENT_OUT, df_pred_part.CLIENT_OUT)
         scores.append(score)
     
-    return np.mean(scores)
+    return 10000*(1-np.mean(scores))
 
 def check_submission(df_pred):
     if len(df_pred.columns) != 3:

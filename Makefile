@@ -2,8 +2,11 @@ all: build
 
 prepare:
 # Вместо "*.ipynb" подставить имя своего ноутбука, если их несколько
-	jupyter nbconvert --to python *.ipynb --output main.py 
-	zip -r submission.zip main.py main.sh Makefile
+	rm -r build_submission/; mkdir build_submission
+	jupyter nbconvert *.ipynb --to python --output-dir=build_submission
+#	jupyter nbconvert --to python *.ipynb
+	cp -r functions *.py Makefile main.sh build_submission
+	zip -r submission.zip *.py build_submission/* Makefile main.sh
 build:
 	echo "I can see this in the log!"
 	ls /usr/conda/bin
@@ -13,5 +16,4 @@ run:
 	bash main.sh
 clean:
 	rm submission.*
-	rm main.py
-
+#	rm main.py
