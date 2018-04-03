@@ -5,7 +5,7 @@ prepare:
 	rm -r build_submission/; mkdir build_submission
 	jupyter nbconvert *.ipynb --to python --output-dir=build_submission
 #	jupyter nbconvert --to python *.ipynb
-	cp -r functions *.py Makefile main.sh model_to_run.pickle build_submission
+	cp -r functions *.py Makefile main.sh *.pickle build_submission
 	cd build_submission; zip -r ../submission.zip .; cd ..
 build:
 	echo "I can see this in the log!"
@@ -15,5 +15,10 @@ build:
 run:
 	bash main.sh
 clean:
+	rm -r build_submission/*
+	rm -r test/*
 	rm submission.*
 #	rm main.py
+copy_local_data:
+	cp ../train.csv.zip .
+test: copy_local_data run
