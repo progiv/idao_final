@@ -1,11 +1,7 @@
 import numpy as np 
 import pandas as pd
 
-
-
 def GenerateFis(df):
-    def split(data):
-        return [data[-7:], data[-14:-7], data[-21:-14], data[-28:-21], data[-34:-29]]
 
     def holiday(df):
         condition_holiday = (
@@ -19,18 +15,21 @@ def GenerateFis(df):
         return condition_holiday + 0
     
     def shift(df, i):
-        df2 = df.copy()
         for n in [1,2,3,4,5]:
-            N = n + 5 - i 
-            df2['out_{}_weeks_ago'.format(N)] = df.CLIENT_OUT.shift(7*N)
-            df2['out_{}_weeks_ago_plus_day'.format(N)] = df.CLIENT_OUT.shift(7*N-1)
-            df2['out_{}_weeks_ago_minus_day'.format(N)] = df.CLIENT_OUT.shift(7*N+1)
-        return df2
+            N = n + i - 1
+            df['same_day_{}_week_ago'.format(n+5)] = df.groupby(['ATM_ID'])['CLIENT_OUT'].shift(7*N)
+            df['mean_{}_week_ago'.format(n+5)] = df.groupby(['ATM_ID'])['mean'].shift(7*N)
+            df['std_{}_week_ago'.format(n+5)] = df.groupby(['ATM_ID'])['std'].shift(7*N)
+            df['same_day_{}_week_ago_plusday'.format(n+5)] = df.groupby(['ATM_ID'])['CLIENT_OUT'].shift(7*N-1)
+            df['same_day_{}_week_ago_minusday'.format(n+5)] = df.groupby(['ATM_ID'])['CLIENT_OUT'].shift(7*N+1)
+        return df
     
     df['month_of_year'] = df.DATE.dt.month
     df['day_of_week'] = df.DATE.dt.dayofweek
     df['day_of_month'] = df.DATE.dt.day
     df['week_of_month'] = (df.DATE.dt.day  - 1) // 7 + 1
+    
+    df['weekend_dummy'] = df.DATE.dt.dayofweek.isin([5,6]) + 0
     df['holiday_dummy'] = holiday(df)
     
     list_dummies = ['day_of_week', 
@@ -39,8 +38,15 @@ def GenerateFis(df):
                 'month_of_year']
     df = pd.get_dummies(df, columns=list_dummies)
     
-    df_splitted = []
-    for i in range(1, 5):
-        df_splitted.append(shift(df, i))
+    df['mean'] = df.CLIENT_OUT.rolling(window=7, center=False).mean()
+    df['std'] = df.CLIENT_OUT.rolling(window=7, center=False).std()
+    dfs = []
+    for i in range(1, 6):
+        dfs.append(shift(df, i))
     
-    return df_splitted
+    for i in range(len(dfs)):
+        dfs[i] = dfs[i].drop('mean', 1)
+        dfs[i] = dfs[i].drop('std', 1)
+        dfs[i] = dfs[i].dropna(subset=dfs[i].columns.drop('CLIENT_OUT'))
+    
+    return dfs
