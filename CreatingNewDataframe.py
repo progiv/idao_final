@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from collections import defaultdict
 
 
 """
@@ -58,12 +59,12 @@ def ChangeFirstZeroesToNone(row):
     return row
 
 
-def CreatingNewPivotTable_TRAIN_ONLY(df, window_size=15):    
+def CleanDataFrame_TRAIN_ONLY(df, window_size=15):    
     """
     HOW TO USE:
     
     
-    df = CreatingNewPivotTable_TRAIN_ONLY(df, window_size=15)
+    df = CleanDataFrame_TRAIN_ONLY(df, window_size=15)
     """
 
     
@@ -109,15 +110,14 @@ def CreatingNewPivotTable_TRAIN_ONLY(df, window_size=15):
     return final_df
 
 
-from collections import defaultdict
 
-def CreatingNewPivotTable_TEST(df, window_size=15):
+def CleanDataFrame_TEST(df, window_size=15):
     """
     HOW TO USE:
     
     
     
-    df, is_small = CreatingNewPivotTable_TEST(df, window_size=15)
+    df, is_small = CleanDataFrame_TEST(df, window_size=15)
     """
 
     ids = np.unique(df.ATM_ID)
